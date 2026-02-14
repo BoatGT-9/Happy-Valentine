@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart as HeartIcon } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
+
 
 type Heart = {
   x: number;
@@ -25,6 +27,8 @@ export default function Page() {
   const [step, setStep] = useState(0);
   const [hearts, setHearts] = useState<Heart[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
+  const [muted, setMuted] = useState(false);
+
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -43,14 +47,31 @@ export default function Page() {
       },
       {
         content:
-          "ตอนนั้นใจหายนะ วงโปรดกำลังจะไม่มีคอนเสิร์ตแล้ว แต่เหมือนได้เริ่มต้นใหม่ เพราะได้เจอเธอ",
+          "ตอนนั้นใจหายนะ ที่วงโปรดกำลังจะไม่มีคอนเสิร์ตแล้ว แต่เหมือนได้เริ่มต้นใหม่ เพราะได้เจอเธอ",
       },
       {
         title: "ความรู้สึกที่มีให้เธอ",
         content: "ทุกครั้งที่ได้อยู่ใกล้เธอ หัวใจก็เต้นแรงขึ้นทุกที",
       },
       { title: "ขอบคุณที่อยู่ด้วยกันมา" },
-      { title: "ขอบคุณที่ทำให้ชีวิตมีความหมายมากขึ้น" },
+      // { title: "ขอบคุณที่ทำให้ชีวิตมีความหมายมากขึ้น" },
+      {
+        content: "ถึงบางครั้งเราอาจจะไม่เข้าใจกันในบางเรื่อง หรืออาจะหลายเรื่องกันนะ",
+      },
+      {
+        content:
+          "แต่ก็ขอบคุณที่เธอก็ยังไม่ได้ทิ้งกันไปไหน ถึงแม้บางทีก็อาจะทำตัวงี่เง่าใส่กันเองบ้าง",
+      },
+      {
+
+        title: "ขอบคุณที่รักกัน"
+      },
+      {
+        content: "อย่าลืมเราอีกได้ไหมนะ ว่ามีคนที่รักเธอมากๆ อยู่ตรงนี้เสมอ ไม่ว่าอะไรจะเกิดขึ้นก็ตาม"
+      },
+      {
+        title: "ฉันรักเธอนะ " + name + " 🤍",
+      },
       {
         title: "Happy Valentine's Day 🌻",
         content:
@@ -64,10 +85,10 @@ export default function Page() {
     const layers = isMobile
       ? [{ count: 5, size: [14, 20], opacity: [0.3, 0.45], speed: [28, 38] }]
       : [
-          { count: 14, size: [12, 18], opacity: [0.12, 0.25], speed: [30, 40] },
-          { count: 10, size: [18, 26], opacity: [0.18, 0.35], speed: [22, 32] },
-          { count: 8, size: [26, 34], opacity: [0.22, 0.45], speed: [16, 24] },
-        ];
+        { count: 14, size: [12, 18], opacity: [0.12, 0.25], speed: [30, 40] },
+        { count: 10, size: [18, 26], opacity: [0.18, 0.35], speed: [22, 32] },
+        { count: 8, size: [26, 34], opacity: [0.22, 0.45], speed: [16, 24] },
+      ];
 
     const Arr = layers.flatMap((layer) =>
       Array.from({ length: layer.count }).map(() => ({
@@ -87,6 +108,42 @@ export default function Page() {
 
     setHearts(Arr);
   }, [isMobile]);
+  const toggleMute = () => {
+  const audio = audioRef.current;
+  if (!audio) return;
+
+  if (muted) {
+    // fade in
+    let v = 0;
+    audio.volume = 0;
+    audio.play().catch(() => {});
+
+    const fade = setInterval(() => {
+      v += 0.03;
+      if (v >= 0.45) {
+        audio.volume = 0.45;
+        clearInterval(fade);
+      } else audio.volume = v;
+    }, 70);
+
+    setMuted(false);
+  } else {
+    // fade out
+    let v = audio.volume;
+
+    const fade = setInterval(() => {
+      v -= 0.04;
+      if (v <= 0) {
+        audio.volume = 0;
+        audio.pause();
+        clearInterval(fade);
+      } else audio.volume = v;
+    }, 60);
+
+    setMuted(true);
+  }
+};
+
 
   useEffect(() => {
     if (!isLogin || !audioRef.current) return;
@@ -110,7 +167,7 @@ export default function Page() {
         audio.pause();
         audio.src = playlist[next].src;
         audio.load();
-        audio.play().catch(() => {});
+        audio.play().catch(() => { });
         fadeIn();
       } else {
         audio.volume = vol;
@@ -143,7 +200,7 @@ export default function Page() {
 
     if (audioRef.current) {
       audioRef.current.volume = 0;
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch(() => { });
       crossFade(0);
     }
   };
@@ -192,12 +249,23 @@ export default function Page() {
       {/* Song label */}
       {isLogin && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-4 right-4 z-50 text-xs text-white/60 backdrop-blur bg-white/5 border border-white/10 px-4 py-2 rounded-full"
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-2 text-xs text-white/70 backdrop-blur bg-white/5 border border-white/10 px-4 py-2 rounded-full shadow-lg"
         >
-          🎵 {playlist[currentTrack].title}
+          <button
+            onClick={toggleMute}
+            className="hover:scale-110 active:scale-95 transition"
+          >
+            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          </button>
+
+          <span className="max-w-[140px] truncate">
+            🎵 {playlist[currentTrack].title}
+          </span>
         </motion.div>
+
       )}
 
       {!isLogin && (
