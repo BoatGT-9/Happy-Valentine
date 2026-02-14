@@ -1,5 +1,11 @@
 "use client";
-
+type Heart = {
+  x: number;
+  size: number;
+  duration: number;
+  delay: number;
+  opacity: number;
+};
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Heart } from "lucide-react";
@@ -10,7 +16,8 @@ export default function Page() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [step, setStep] = useState(0);
-  const [hearts, setHearts] = useState([]);
+  const [hearts, setHearts] = useState<Heart[]>([]);
+
   const ANNIVERSARY_PASSWORD = "03012026";
 
   useEffect(() => {
@@ -20,7 +27,7 @@ export default function Page() {
       { count: 8, size: [22, 32], opacity: [0.25, 0.45], speed: [16, 22] },
     ];
 
-    const arr = layers.flatMap((layer) =>
+    const Arr = layers.flatMap((layer) =>
       Array.from({ length: layer.count }).map(() => ({
         x: 5 + Math.random() * 90,
         size:
@@ -36,7 +43,7 @@ export default function Page() {
       }))
     );
 
-    setHearts(arr);
+    setHearts(Arr);
   }, []);
 
   const scenes = [
