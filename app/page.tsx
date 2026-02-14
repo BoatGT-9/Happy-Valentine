@@ -288,7 +288,7 @@ export default function Page() {
           <input
             type="password"
             className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3"
-            placeholder="รหัสวันครบรอบ"
+            placeholder="รหัสผ่าน"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
