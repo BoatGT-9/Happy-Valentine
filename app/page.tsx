@@ -46,6 +46,14 @@ export default function Page() {
     setHearts(Arr);
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: { key: string; }) => {
+      if (e.key === "ArrowRight") setStep((s) => Math.min(s + 1, scenes.length - 1));
+      if (e.key === "ArrowLeft") setStep((s) => Math.max(s - 1, 0));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   const scenes = [
     { title: `สวัสดี ${name}` },
     {
@@ -67,7 +75,7 @@ export default function Page() {
     { title: "ขอบคุณที่อยู่ด้วยกันมา" },
     { title: "ขอบคุณที่ทำให้ชีวิตมีความหมายมากขึ้น" },
     {
-      title: "Happy Valentine's Day 2026",
+      title: "Happy Valentine's Day 🌻",
       content:
         "ขอให้ปีนี้เป็นปีที่ดีสำหรับเรา และขอให้ความรักของเรายิ่งใหญ่ขึ้นทุกวันนะ",
     },
@@ -147,7 +155,7 @@ export default function Page() {
 
       {/* 🎵 Background music */}
       <audio autoPlay loop>
-        <source src="/love.mp3" type="audio/mpeg" />
+        <source src="https://www.youtube.com/watch?v=IQt4cPkgUhk" type="audio/mpeg" />
       </audio>
 
       {!isLogin && (
@@ -201,11 +209,11 @@ export default function Page() {
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            exit={{ opacity: 0, y: -30, scale: 0.96, filter: "blur(8px)" }}
-            className="relative z-10 max-w-3xl text-center space-y-12"
+            initial={{ opacity: 0, y: 15, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -15, scale: 0.98 }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="relative z-10 max-w-3xl text-center space-y-12 will-change-transform transform-gpu"
           >
 
             <h2 className="text-3xl font-medium">
@@ -218,29 +226,30 @@ export default function Page() {
               </p>
             )}
 
-            <div className="flex justify-center items-center gap-6">
-              {step > scenes.length - 0 && (
-                <motion.button
-                  whileHover={{ scale: 1.07 }}
-                  whileTap={{ scale: 0.93 }}
-                  onClick={() => setStep(step - 1)}
-                  className="px-10 py-3 bg-white/10 border border-white/20 backdrop-blur text-white rounded-full text-lg font-medium shadow-lg hover:bg-white/20 transition"
-                >
-                  ← ย้อนกลับ
-                </motion.button>
-              )}
 
-              {step < scenes.length - 1 && (
+            {step < scenes.length - 1 && (
+              <div className="flex justify-center items-center gap-6">
+                
+                {step > 0 && (
+                  <motion.button
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setStep((s) => s - 1)}
+                    className="px-10 py-3 bg-white/10 border border-white/20 backdrop-blur text-white rounded-full text-lg font-medium shadow-lg hover:bg-white/20 transition"
+                  >
+                    ← ย้อนกลับ
+                  </motion.button>
+                )}
                 <motion.button
-                  whileHover={{ scale: 1.07 }}
-                  whileTap={{ scale: 0.93 }}
-                  onClick={() => setStep(step + 1)}
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setStep((s) => s + 1)}
                   className="px-14 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:brightness-110 text-white rounded-full text-lg font-medium shadow-xl"
                 >
                   ต่อไป →
                 </motion.button>
-              )}
-            </div>
+              </div>
+            )}
 
 
             {step === scenes.length - 1 && (
