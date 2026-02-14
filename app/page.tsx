@@ -1,5 +1,9 @@
 "use client";
 
+import { useEffect, useMemo, useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart as HeartIcon } from "lucide-react";
+
 type Heart = {
   x: number;
   size: number;
@@ -8,9 +12,10 @@ type Heart = {
   opacity: number;
 };
 
-import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Heart as HeartIcon } from "lucide-react";
+const playlist = [
+  { src: "/intentions.mp3", title: "Starfall – Intentions" },
+
+];
 
 export default function Page() {
   const [isLogin, setIsLogin] = useState(false);
@@ -19,13 +24,15 @@ export default function Page() {
   const [error, setError] = useState("");
   const [step, setStep] = useState(0);
   const [hearts, setHearts] = useState<Heart[]>([]);
+  const [currentTrack, setCurrentTrack] = useState(0);
+
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const ANNIVERSARY_PASSWORD = "03012026";
 
   const isMobile =
     typeof window !== "undefined" && window.innerWidth < 768;
 
-  // 🎯 Scene memoization
   const scenes = useMemo(
     () => [
       { title: `สวัสดี ${name}` },
@@ -53,14 +60,13 @@ export default function Page() {
     [name]
   );
 
-  // 💕 Hearts optimized generator
   useEffect(() => {
     const layers = isMobile
-      ? [{ count: 4, size: [12, 18], opacity: [0.25, 0.4], speed: [30, 38] }]
+      ? [{ count: 5, size: [14, 20], opacity: [0.3, 0.45], speed: [28, 38] }]
       : [
-          { count: 12, size: [10, 16], opacity: [0.12, 0.22], speed: [28, 36] },
-          { count: 10, size: [16, 22], opacity: [0.18, 0.32], speed: [22, 30] },
-          { count: 8, size: [22, 32], opacity: [0.25, 0.45], speed: [16, 22] },
+          { count: 14, size: [12, 18], opacity: [0.12, 0.25], speed: [30, 40] },
+          { count: 10, size: [18, 26], opacity: [0.18, 0.35], speed: [22, 32] },
+          { count: 8, size: [26, 34], opacity: [0.22, 0.45], speed: [16, 24] },
         ];
 
     const Arr = layers.flatMap((layer) =>
@@ -82,21 +88,72 @@ export default function Page() {
     setHearts(Arr);
   }, [isMobile]);
 
+  useEffect(() => {
+    if (!isLogin || !audioRef.current) return;
+
+    const index = Math.min(step, playlist.length - 1);
+    if (index === currentTrack) return;
+
+    crossFade(index);
+  }, [step, isLogin]);
+
+  const crossFade = (next: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    let vol = audio.volume;
+
+    const fadeOut = setInterval(() => {
+      vol -= 0.04;
+      if (vol <= 0) {
+        clearInterval(fadeOut);
+        audio.pause();
+        audio.src = playlist[next].src;
+        audio.load();
+        audio.play().catch(() => {});
+        fadeIn();
+      } else {
+        audio.volume = vol;
+      }
+    }, 40);
+
+    const fadeIn = () => {
+      let v = 0;
+      const fade = setInterval(() => {
+        v += 0.03;
+        if (v >= 0.45) {
+          audio.volume = 0.45;
+          clearInterval(fade);
+        } else {
+          audio.volume = v;
+        }
+      }, 70);
+    };
+
+    setCurrentTrack(next);
+  };
+
   const handleLogin = () => {
     if (!name) return setError("กรุณาใส่ชื่อ");
     if (password !== ANNIVERSARY_PASSWORD)
       return setError("รหัสไม่ถูกต้อง");
+
     setIsLogin(true);
     setError("");
+
+    if (audioRef.current) {
+      audioRef.current.volume = 0;
+      audioRef.current.play().catch(() => {});
+      crossFade(0);
+    }
   };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#0f0c1d] flex items-center justify-center px-6 text-white">
 
-      {/* Ambient base */}
+      {/* Ambient background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(167,139,250,0.20),transparent_60%),radial-gradient(circle_at_80%_70%,rgba(236,72,153,0.15),transparent_60%)]" />
 
-      {/* Heavy glow only desktop */}
       {!isMobile && (
         <motion.div
           className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(168,85,247,0.35),transparent_65%),radial-gradient(circle_at_70%_60%,rgba(236,72,153,0.25),transparent_65%)] blur-3xl"
@@ -105,8 +162,8 @@ export default function Page() {
         />
       )}
 
-      {/* 💕 Floating hearts */}
-      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {/* Hearts */}
+      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden will-change-transform">
         {hearts.map((heart, i) => (
           <motion.div
             key={i}
@@ -129,25 +186,29 @@ export default function Page() {
         ))}
       </div>
 
-      {/* 🎵 music */}
-      <audio autoPlay loop playsInline>
-        <source src="/music.mp3" type="audio/mpeg" />
-      </audio>
+      {/* Audio */}
+      <audio ref={audioRef} loop playsInline preload="metadata" />
+
+      {/* Song label */}
+      {isLogin && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-4 right-4 z-50 text-xs text-white/60 backdrop-blur bg-white/5 border border-white/10 px-4 py-2 rounded-full"
+        >
+          🎵 {playlist[currentTrack].title}
+        </motion.div>
+      )}
 
       {!isLogin && (
         <motion.div
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5 }}
           className="relative z-10 w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 p-10 rounded-3xl space-y-6 text-center shadow-2xl"
         >
-          <div className="flex justify-center">
-            <HeartIcon className="w-9 h-9 text-pink-400" />
-          </div>
-
-          <h1 className="text-2xl font-semibold tracking-tight">
-            พื้นที่พิเศษของเรา
-          </h1>
+          <HeartIcon className="w-10 h-10 text-pink-400 mx-auto" />
+          <h1 className="text-2xl font-semibold">พื้นที่พิเศษของเรา</h1>
 
           <input
             className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3"
@@ -159,7 +220,7 @@ export default function Page() {
           <input
             type="password"
             className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3"
-            placeholder="รหัสผ่าน"
+            placeholder="รหัสวันครบรอบ"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -180,11 +241,11 @@ export default function Page() {
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.35, ease: "linear" }}
-            className="relative z-10 max-w-3xl text-center space-y-12 will-change-transform transform-gpu"
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.35 }}
+            className="relative z-10 max-w-3xl text-center space-y-12 transform-gpu"
           >
             <h2 className="text-3xl font-medium">
               {scenes[step].title}
